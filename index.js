@@ -10,14 +10,10 @@
         alert(
             "Muzzu Rename Engine\n\n" +
             "Created by: Muzammil Khan\n" +
-            "GitHub: https://yemkhan.github.io\n" +
-            "Follow my Github to get the latest version\n" +
-            "Happy animating folks!"
+            "https://github.com/yemkhan/Batch-name-generator\n" +
+            "Check Github for ReadMe\n" +
+            "Happy Creating Folks!"
         );
-
-        // Optional: Open GitHub in default browser
-        // Uncomment the line below if you want it to open directly
-        // system.callSystem("open https://github.com/yemkhan/Batch-name-generator");
     };
 
     // Game Name Input
@@ -43,7 +39,7 @@
     var artistName = artistNameGroup.add("edittext", undefined, "MK");
     artistName.characters = 30;
 
-    // Project Sub-Name Input (e.g., "Muzzu")
+    // Project Sub-Name Input
     var projectSubNameGroup = win.add("group");
     projectSubNameGroup.add("statictext", undefined, "Project Sub-Name:");
     var projectSubName = projectSubNameGroup.add("edittext", undefined, "Muzzu");
@@ -109,7 +105,6 @@
     customSuffixInput.characters = 30;
     customSuffixInput.enabled = false;
 
-    // Enable Custom Suffix Input
     suffixDropdown.onChange = function () {
         if (suffixDropdown.selection.text === "Custom") {
             customSuffixInput.enabled = true;
@@ -174,10 +169,65 @@
                     alert("Copied to clipboard: " + name);
                 };
             })(newCompName);
+
+            var replaceButton = nameGroup.add("button", undefined, "Replace");
+            replaceButton.onClick = (function (name) {
+                return function () {
+                    var tempWin = new Window("dialog", "Replace Composition");
+                    tempWin.orientation = "column";
+
+                    tempWin.add("statictext", undefined, "Select a composition to replace:");
+                    var dropdown = tempWin.add("dropdownlist", undefined, []);
+
+                    var availableComps = getAvailableCompositions();
+                    for (var j = 0; j < availableComps.length; j++) {
+                        dropdown.add("item", availableComps[j]);
+                    }
+                    if (availableComps.length > 0) dropdown.selection = 0;
+
+                    var confirmButton = tempWin.add("button", undefined, "Replace");
+                    confirmButton.onClick = function () {
+                        if (dropdown.selection) {
+                            var selectedComp = dropdown.selection.text;
+                            replaceCompositionName(selectedComp, name);
+                            alert("Replaced '" + selectedComp + "' with '" + name + "'");
+                        }
+                        tempWin.close();
+                    };
+
+                    var cancelButton = tempWin.add("button", undefined, "Cancel");
+                    cancelButton.onClick = function () {
+                        tempWin.close();
+                    };
+
+                    tempWin.show();
+                };
+            })(newCompName);
         }
 
         win.layout.layout(true);
     };
+
+    // Get available compositions in the project
+    function getAvailableCompositions() {
+        var comps = [];
+        for (var i = 1; i <= app.project.numItems; i++) {
+            if (app.project.item(i) instanceof CompItem) {
+                comps.push(app.project.item(i).name);
+            }
+        }
+        return comps;
+    }
+
+    // Replace composition name
+    function replaceCompositionName(oldName, newName) {
+        for (var i = 1; i <= app.project.numItems; i++) {
+            if (app.project.item(i) instanceof CompItem && app.project.item(i).name === oldName) {
+                app.project.item(i).name = newName;
+                break;
+            }
+        }
+    }
 
     win.center();
     win.show();
