@@ -9,7 +9,7 @@
     infoButton.onClick = function () {
         alert(
             "Muzzu Rename Engine\n\n" +
-            "Created by: Muzammil Khan\n" +
+            "Created by: Alshoja \n" +
             "https://github.com/yemkhan/Batch-name-generator\n" +
             "Check Github for ReadMe\n" +
             "Happy Creating Folks!"
