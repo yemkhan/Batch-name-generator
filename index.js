@@ -2,20 +2,6 @@
     var win = new Window("palette", "Muzzu Rename Engine", undefined);
     win.orientation = "column";
 
-    // Info Button (top-right corner)
-    var infoButton = win.add("button", undefined, "i");
-    infoButton.alignment = "right";
-
-    infoButton.onClick = function () {
-        alert(
-            "Muzzu Rename Engine\n\n" +
-            "Created by: Muzammil Khan\n" +
-            "https://github.com/yemkhan/Batch-name-generator\n" +
-            "Check Github for ReadMe\n" +
-            "Happy Creating Folks!"
-        );
-    };
-
     // Game Name Input
     var gameNameGroup = win.add("group");
     gameNameGroup.add("statictext", undefined, "Game Name:");
@@ -39,7 +25,7 @@
     var artistName = artistNameGroup.add("edittext", undefined, "MK");
     artistName.characters = 30;
 
-    // Project Sub-Name Input
+    // Project Sub-Name Input (e.g., "Muzzu")
     var projectSubNameGroup = win.add("group");
     projectSubNameGroup.add("statictext", undefined, "Project Sub-Name:");
     var projectSubName = projectSubNameGroup.add("edittext", undefined, "Muzzu");
@@ -105,6 +91,7 @@
     customSuffixInput.characters = 30;
     customSuffixInput.enabled = false;
 
+    // Enable Custom Suffix Input
     suffixDropdown.onChange = function () {
         if (suffixDropdown.selection.text === "Custom") {
             customSuffixInput.enabled = true;
@@ -120,10 +107,14 @@
         }
     };
 
-    // Container for Generated Names and Copy Buttons
-    var outputContainer = win.add("group");
-    outputContainer.orientation = "column";
-    outputContainer.alignment = "fill";
+    // Text Area for Generated Names
+    var outputGroup = win.add("group");
+    outputGroup.add("statictext", undefined, "Generated Names:");
+    var outputTextArea = outputGroup.add("edittext", undefined, "", {
+        multiline: true,
+        scrolling: true
+    });
+    outputTextArea.size = [400, 200];
 
     // Rename Button
     var renameButton = win.add("button", undefined, "Generate Names");
@@ -138,96 +129,18 @@
         var levelText = level.text;
         var suffix = customSuffixInput.text;
 
-        // Clear existing entries
-        while (outputContainer.children.length > 0) {
-            outputContainer.remove(outputContainer.children[0]);
-        }
-
+        var outputText = "";
         for (var i = startSerial; i <= endSerial; i++) {
             var concept = conceptFields[i - startSerial].conceptName.text;
 
             // Construct the new name
             var newCompName = game + "_" + i + "_" + artist + "_" + subName + "-" + concept + "_" + motion + "-" + levelText + "_" + suffix;
-
-            // Create a group for each name and its copy button
-            var nameGroup = outputContainer.add("group");
-            nameGroup.orientation = "row";
-            nameGroup.alignment = "left";
-
-            var nameText = nameGroup.add("statictext", undefined, newCompName);
-            nameText.characters = 60;
-
-            var copyButton = nameGroup.add("button", undefined, "Copy");
-            copyButton.onClick = (function (name) {
-                return function () {
-                    var platform = $.os.toLowerCase().indexOf("mac") >= 0 ? "mac" : "win";
-                    if (platform === "mac") {
-                        system.callSystem("echo " + name + " | pbcopy");
-                    } else {
-                        system.callSystem("echo " + name + " | clip");
-                    }
-                    alert("Copied to clipboard: " + name);
-                };
-            })(newCompName);
-
-            var replaceButton = nameGroup.add("button", undefined, "Replace");
-            replaceButton.onClick = (function (name) {
-                return function () {
-                    var tempWin = new Window("dialog", "Replace Composition");
-                    tempWin.orientation = "column";
-
-                    tempWin.add("statictext", undefined, "Select a composition to replace:");
-                    var dropdown = tempWin.add("dropdownlist", undefined, []);
-
-                    var availableComps = getAvailableCompositions();
-                    for (var j = 0; j < availableComps.length; j++) {
-                        dropdown.add("item", availableComps[j]);
-                    }
-                    if (availableComps.length > 0) dropdown.selection = 0;
-
-                    var confirmButton = tempWin.add("button", undefined, "Replace");
-                    confirmButton.onClick = function () {
-                        if (dropdown.selection) {
-                            var selectedComp = dropdown.selection.text;
-                            replaceCompositionName(selectedComp, name);
-                            alert("Replaced '" + selectedComp + "' with '" + name + "'");
-                        }
-                        tempWin.close();
-                    };
-
-                    var cancelButton = tempWin.add("button", undefined, "Cancel");
-                    cancelButton.onClick = function () {
-                        tempWin.close();
-                    };
-
-                    tempWin.show();
-                };
-            })(newCompName);
+            outputText += newCompName + "\n";
         }
 
-        win.layout.layout(true);
+        // Populate the text area with generated names
+        outputTextArea.text = outputText;
     };
-
-    // Get available compositions in the project
-    function getAvailableCompositions() {
-        var comps = [];
-        for (var i = 1; i <= app.project.numItems; i++) {
-            if (app.project.item(i) instanceof CompItem) {
-                comps.push(app.project.item(i).name);
-            }
-        }
-        return comps;
-    }
-
-    // Replace composition name
-    function replaceCompositionName(oldName, newName) {
-        for (var i = 1; i <= app.project.numItems; i++) {
-            if (app.project.item(i) instanceof CompItem && app.project.item(i).name === oldName) {
-                app.project.item(i).name = newName;
-                break;
-            }
-        }
-    }
 
     win.center();
     win.show();
